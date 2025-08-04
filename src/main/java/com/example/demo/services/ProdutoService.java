@@ -1,36 +1,45 @@
 package com.example.demo.services;
 
 import com.example.demo.models.Produto;
+import com.example.demo.repositories.ProdutoRepository;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
-public class ProdutoService {
-    private List<Produto> produtos = new ArrayList<>();
-    private long nextId = 1L;
-    public List<Produto> listarProduto(){
-        return produtos;
+public class ProdutoService  {
+
+    private final ProdutoRepository repository;
+ 
+    public ProdutoService(ProdutoRepository repository){
+        this.repository = repository;
     }
+
+ 
+    public List<Produto> listarProduto(){
+        return repository.findAll();
+    }
+
     public Optional<Produto> buscarProduto(Long id){
-        return produtos.stream().filter(p -> p.getId().equals(id)).findFirst();
+        return repository.findById(id);
     }
 
     public Produto adicionar(Produto produto){
-        produto.setId(nextId++);
-        produtos.add(produto);
-        return produto;
+        return repository.save(produto);
     }
+
     public Optional<Produto> atualizar(Long id, Produto novoProduto){
         return buscarProduto(id).map(p -> {
             p.setNome(novoProduto.getNome());
             p.setPreco(novoProduto.getPreco());
-            return p;
+            return repository.save(p);
         });
     }
+
     public boolean excluir(Long id){
-        return produtos.removeIf(p->p.getId().equals(id));
+        return buscarProduto(id).map(produto -> {
+            repository.delete(produto);
+            return true;
+        }).orElse(false);
     }
 }
